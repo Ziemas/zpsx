@@ -19,7 +19,7 @@ class cpu {
 
   private:
     static constexpr u32 RESET_VECTOR = 0xbfc00000;
-    static constexpr int REGISTER_COUNT = 32;
+    static constexpr int REGISTER_COUNT = 31;
     std::array<u32, REGISTER_COUNT> m_regs{0};
 
     bus &m_bus;
