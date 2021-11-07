@@ -111,10 +111,8 @@ void cpu::inst_bne(u32 instr) {
 }
 
 void cpu::inst_j(u32 instr) {
-    auto target = ((instr & 0x03ffffffff) << 2);
+    auto target = ((instr & 0x03ffffff) << 2);
     branch((m_pc & 0xf0000000) + 4 + target);
-
-
 }
 
 void cpu::inst_special(u32 instr) {
