@@ -11,6 +11,7 @@ class bus {
         : m_ram(std::move(ram)), m_rom(std::move(rom)){};
 
     void fetch_instr(u32 pc, u32 &value);
+    void store32(u32 addr, u32 value);
 
   private:
     std::unique_ptr<byte[]> m_ram;

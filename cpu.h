@@ -24,8 +24,12 @@ class cpu {
 
     bus &m_bus;
 
-    u32 m_pc{0};
-    u32 m_next_pc{RESET_VECTOR};
+    bool m_branch{false};
+    u8 m_branch_delay{0};
+
+    u32 m_pc{RESET_VECTOR};
+    u32 m_next_pc{0};
+    u64 m_cycles{0};
 
     // clang-format off
     enum class regname {
@@ -112,6 +116,24 @@ class cpu {
         SLT = 0x2a,
         SLTU = 0x2b,
     };
+
+    void branch(u32 addr) {
+        m_next_pc = addr;
+        m_branch = true;
+        m_branch_delay = 1;
+    };
+
+    void inst_lui(u32 instr);
+    void inst_addi(u32 instr);
+    void inst_addiu(u32 instr);
+    void inst_ori(u32 instr);
+    void inst_sw(u32 instr);
+    void inst_bne(u32 instr);
+    void inst_j(u32 instr);
+
+    void inst_special(u32 instr);
+    void inst_slt(u32 instr);
+    void inst_sll(u32 instr);
 
     static std::string_view reg_to_string(int reg);
     static std::string_view disassmble(u32 instr);
