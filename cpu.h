@@ -127,6 +127,8 @@ class cpu {
         m_branch_delay = 1;
     };
 
+    void set_reg(u8 reg, u32 value);
+
     void inst_lui(u32 instr);
     void inst_addi(u32 instr);
     void inst_addiu(u32 instr);

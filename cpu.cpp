@@ -61,13 +61,18 @@ bool cpu::run() {
     return true;
 }
 
+void cpu::set_reg(u8 reg, u32 value) {
+    m_regs[reg] = value;
+    m_regs[0] = 0;
+}
+
 // TODO exception?
 void cpu::inst_addi(u32 instr) {
     s32 imm = static_cast<s16>(instr & 0xffff);
     auto rt = (instr >> 16) & 0x1f;
     auto rs = (instr >> 21) & 0x1f;
 
-    m_regs[rt] = m_regs[rs] + imm;
+    set_reg(rt, m_regs[rs] + imm);
 }
 
 void cpu::inst_addiu(u32 instr) {
@@ -75,7 +80,7 @@ void cpu::inst_addiu(u32 instr) {
     auto rt = (instr >> 16) & 0x1f;
     auto rs = (instr >> 21) & 0x1f;
 
-    m_regs[rt] = m_regs[rs] + imm;
+    set_reg(rt, m_regs[rs] + imm);
 }
 
 void cpu::inst_sw(u32 instr) {
@@ -91,13 +96,13 @@ void cpu::inst_ori(u32 instr) {
     auto rt = (instr >> 16) & 0x1f;
     auto rs = (instr >> 21) & 0x1f;
 
-    m_regs[rt] = m_regs[rs] | imm;
+    set_reg(rt, m_regs[rs] | imm);
 }
 
 void cpu::inst_lui(u32 instr) {
     auto imm = instr & 0xffff;
     auto rt = (instr >> 16) & 0x1f;
-    m_regs[rt] = imm << 16;
+    set_reg(rt, imm << 16);
 }
 
 void cpu::inst_bne(u32 instr) {
@@ -136,9 +141,9 @@ void cpu::inst_slt(u32 instr) {
     auto rs = (instr >> 21) & 0x1f;
 
     if (m_regs[rs] < m_regs[rt]) {
-        m_regs[rd] = 1;
+        set_reg(rd, 1);
     } else {
-        m_regs[rd] = 0;
+        set_reg(rd, 0);
     }
 
 }
@@ -148,7 +153,7 @@ void cpu::inst_sll(u32 instr) {
     auto rd = (instr >> 11) & 0x1f;
     auto rt = (instr >> 16) & 0x1f;
 
-    m_regs[rd] = m_regs[rt] << sa;
+    set_reg(rd, m_regs[rt] << sa);
 }
 
 std::string_view cpu::disassmble(u32 instr) {
