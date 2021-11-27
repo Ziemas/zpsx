@@ -1,3 +1,5 @@
+// Copyright: 2021 - 2021, Ziemas
+// SPDX-License-Identifier: GPL-3.0-or-later
 #include "bus.h"
 #include <fmt/format.h>
 
