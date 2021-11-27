@@ -21,10 +21,17 @@ bool cpu::run() {
     m_bus.fetch_instr(m_pc, instr);
     auto op = opcode(instr >> 26);
 
+
+    fmt::print("{:x}: executing {}\n", m_pc, disassmble(instr));
+
     switch (op) {
-    case opcode::SPECIAL:
-        inst_special(instr);
+    case opcode::SPECIAL: {
+        bool implemented = inst_special(instr);
+        if (!implemented) {
+            return false;
+        }
         break;
+    }
     case opcode::LUI:
         inst_lui(instr);
         break;
@@ -46,15 +53,28 @@ bool cpu::run() {
     case opcode::J:
         inst_j(instr);
         break;
+    case opcode::COP0:
+    case opcode::COP1:
+    case opcode::COP2:
+    case opcode::COP3:
+        inst_cop(instr);
+        break;
+    case opcode::LW:
+        inst_lw(instr);
+        break;
+    case opcode::SH:
+        inst_sh(instr);
+        break;
     default:
-        fmt::print("{:x}: Unimplemented opcode {}\n", m_pc, disassmble(instr));
+        fmt::print("{}: {:x}: Unimplemented opcode {}\n", m_cycles, m_pc,
+                   disassmble(instr));
         return false;
     }
 
-    fmt::print("{:x}: executing {}\n", m_pc, disassmble(instr));
-    for (int i = 0; i < REGISTER_COUNT; i++) {
-        fmt::print("{}: {:x}\n", magic_enum::enum_name(regname(i)), m_regs[i]);
-    }
+    // for (int i = 0; i < REGISTER_COUNT; i++) {
+    //     fmt::print("{}: {:x}\n", magic_enum::enum_name(regname(i)),
+    //     m_regs[i]);
+    // }
 
     m_cycles++;
 
@@ -120,7 +140,27 @@ void cpu::inst_j(u32 instr) {
     branch((m_pc & 0xf0000000) + 4 + target);
 }
 
-void cpu::inst_special(u32 instr) {
+void cpu::inst_lw(u32 instr) {
+    s16 offset = instr & 0xffff;
+    auto rt = (instr >> 16) & 0x1f;
+    auto base = (instr >> 21) & 0x1f;
+
+    auto address = m_regs[base] + offset;
+    set_reg(rt, m_bus.read32(address));
+}
+
+void cpu::inst_sh(u32 instr) {
+    s16 offset = instr & 0xffff;
+    auto rt = (instr >> 16) & 0x1f;
+    auto base = (instr >> 21) & 0x1f;
+
+    auto address = m_regs[base] + offset;
+    m_bus.store16(address, m_regs[rt]);
+}
+
+void cpu::inst_cop(u32 instr) { fmt::print("WARNING! COP INSTR\n"); }
+
+bool cpu::inst_special(u32 instr) {
     auto func = func_special(instr & 0x3f);
     switch (func) {
     case func_special::SLL:
@@ -129,10 +169,51 @@ void cpu::inst_special(u32 instr) {
     case func_special::SLT:
         inst_slt(instr);
         break;
+    case func_special::OR:
+        inst_or(instr);
+        break;
+    case func_special::SLTU:
+        inst_sltu(instr);
+        break;
+    case func_special::ADDU:
+        inst_addu(instr);
+        break;
     default:
-        fmt::print("{:x}: Unimplemented opcode {}\n", m_pc, disassmble(instr));
+        fmt::print("{}: {:x}: Unimplemented special opcode {}\n", m_cycles,
+                   m_pc, disassmble(instr));
+        return false;
         break;
     }
+
+    return true;
+}
+
+void cpu::inst_addu(u32 instr) {
+    auto rd = (instr >> 11) & 0x1f;
+    auto rt = (instr >> 16) & 0x1f;
+    auto rs = (instr >> 21) & 0x1f;
+
+    set_reg(rd, m_regs[rs] + m_regs[rt]);
+}
+
+void cpu::inst_sltu(u32 instr) {
+    auto rd = (instr >> 11) & 0x1f;
+    auto rt = (instr >> 16) & 0x1f;
+    auto rs = (instr >> 21) & 0x1f;
+
+    if (m_regs[rs] < m_regs[rt])
+        set_reg(rd, 1);
+    else
+        set_reg(rd, 0);
+
+}
+
+void cpu::inst_or(u32 instr) {
+    auto rd = (instr >> 11) & 0x1f;
+    auto rt = (instr >> 16) & 0x1f;
+    auto rs = (instr >> 21) & 0x1f;
+
+    set_reg(rd, m_regs[rs] | m_regs[rt]);
 }
 
 void cpu::inst_slt(u32 instr) {
@@ -145,7 +226,6 @@ void cpu::inst_slt(u32 instr) {
     } else {
         set_reg(rd, 0);
     }
-
 }
 
 void cpu::inst_sll(u32 instr) {

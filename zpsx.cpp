@@ -9,6 +9,7 @@
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fmt::print("Usage: ./zpsx [romfile]\n");
+        return 1;
     }
 
     std::fstream romfile(argv[1], std::fstream::binary | std::fstream::in);

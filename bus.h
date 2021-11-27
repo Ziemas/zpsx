@@ -12,6 +12,9 @@ class bus {
 
     void fetch_instr(u32 pc, u32 &value);
     void store32(u32 addr, u32 value);
+    void store16(u32 addr, u16 value);
+
+    u32 read32(u32 addr);
 
   private:
     std::unique_ptr<byte[]> m_ram;

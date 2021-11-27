@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 
+#include "bitfield.h"
 #include "bus.h"
 #include "types.h"
 #include <array>
@@ -9,7 +10,7 @@
 
 class cpu {
   public:
-    cpu(bus &bus) : m_bus(bus){};
+    cpu(bus& bus) : m_bus(bus){};
 
     bool run();
     void reset() {
@@ -20,9 +21,12 @@ class cpu {
   private:
     static constexpr u32 RESET_VECTOR = 0xbfc00000;
     static constexpr int REGISTER_COUNT = 31;
+    static constexpr int COP0_REG_COUNT = 15;
     std::array<u32, REGISTER_COUNT> m_regs{0};
 
-    bus &m_bus;
+    std::array<u32, COP0_REG_COUNT> cop0{0};
+
+    bus& m_bus;
 
     bool m_branch{false};
     u8 m_branch_delay{0};
@@ -121,6 +125,20 @@ class cpu {
         SLTU = 0x2b,
     };
 
+    enum class cop0_reg {
+        PRId = 15,
+        SR = 12,
+        Cause = 13,
+        EPC = 14,
+        BadVaddr = 8,
+        Config = 3,
+        BusCtrl = 2,
+        PortSize = 10,
+        Count = 9,
+        Compare = 11,
+
+    };
+
     void branch(u32 addr) {
         m_next_pc = addr;
         m_branch = true;
@@ -136,10 +154,16 @@ class cpu {
     void inst_sw(u32 instr);
     void inst_bne(u32 instr);
     void inst_j(u32 instr);
+    void inst_cop(u32 instr);
+    void inst_lw(u32 instr);
+    void inst_sh(u32 instr);
 
-    void inst_special(u32 instr);
+    bool inst_special(u32 instr);
     void inst_slt(u32 instr);
     void inst_sll(u32 instr);
+    void inst_or(u32 instr);
+    void inst_sltu(u32 instr);
+    void inst_addu(u32 instr);
 
     static std::string_view reg_to_string(int reg);
     static std::string_view disassmble(u32 instr);
